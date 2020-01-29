@@ -1,0 +1,61 @@
+// CiteVista
+digraph {
+	158635 [label=" James L. Hooper
+v. David L.
+Olmstead (Del.
+Jul. 19, 2018)"]
+	158635 [label=" James L. Hooper
+v. David L.
+Olmstead (Del.
+Jul. 19, 2018)" color="#f6ff52" style=filled]
+	158635 -> 184252
+	184252 [label=" Herbert Lindsey
+Bey v. The State
+of Delaware, 402
+A.2d 362 (Del.
+Jan. 8, 1979)"]
+	184252 [label=" Herbert Lindsey
+Bey v. The State
+of Delaware, 402
+A.2d 362 (Del.
+Jan. 8, 1979)"]
+	184252 -> 182927
+	182927 [label=" Paul W. Davis
+v. State of
+Delaware, 400
+A.2d 292 (Del.
+Sep. 11, 1978)"]
+	182927 [label=" Paul W. Davis
+v. State of
+Delaware, 400
+A.2d 292 (Del.
+Sep. 11, 1978)"]
+	184252 -> 182268
+	182268 [label=" Allen M. Tatman
+v. State of
+Delaware, 314
+A.2d 417 (Del.
+Dec. 7, 1973)"]
+	182268 [label=" Allen M. Tatman
+v. State of
+Delaware, 314
+A.2d 417 (Del.
+Dec. 7, 1973)"]
+	184252 -> 183889
+	183889 [label=" Arson I. Gibbs
+v. State of
+Delaware, 359
+A.2d 164 (Del.
+Apr. 12, 1976)"]
+	183889 [label=" Arson I. Gibbs
+v. State of
+Delaware, 359
+A.2d 164 (Del.
+Apr. 12, 1976)"]
+	"98 S.Ct. 2156" [label="98 S.Ct. 2156"]
+	184252 -> "98 S.Ct. 2156"
+	"95 S.Ct. 2525" [label="95 S.Ct. 2525"]
+	184252 -> "95 S.Ct. 2525"
+	"554 A.2d 778" [label="554 A.2d 778"]
+	158635 -> "554 A.2d 778"
+}

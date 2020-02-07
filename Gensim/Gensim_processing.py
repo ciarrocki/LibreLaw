@@ -16,12 +16,10 @@ from bs4 import BeautifulSoup
 
 
 
-path0 = '/home/dan/Data/Gensim/Corpora/test0.txt'
-
 
 
 def save_text_as_paragraphs(jurisdiction_list, savepath):
-    """ MAINTEXT ONLY!!! Does not include footnotes!"""
+    """ MAINTEXT ONLY - Does not include footnotes!"""
 
     with open(savepath, "w") as save_file:
         

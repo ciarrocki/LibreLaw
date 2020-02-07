@@ -22,32 +22,14 @@ from OPparser_toDjango import saveOpToDjango
 
 
 
-
-
-### PROBLEM SET #1 (CASENAME/PARTIES)
-# DONE p0 = "/home/dan/Data/DelawareGov/Processed/2011/164960.detx"
-# DONE p1 = "/home/dan/Data/DelawareGov/Processed/2011/156620.detx"
-# DONE p2 = "/home/dan/Data/DelawareGov/Processed/2011/149490.detx"
-# DONE p3 = "/home/dan/Data/DelawareGov/Processed/2011/154900.detx"
-p4 = "/home/dan/Data/DelawareGov/Processed/2011/160690.detx"
-# DONE p5 = "/home/dan/Data/DelawareGov/Processed/2016/242620.detx"
-
-# PROBLEM SET #2 (BAD FRONT/BODY SPLIT)
-# DONE p6 = "/home/dan/Data/DelawareGov/Processed/2015/226520.detx"
-
-# PROBLEM SET #3 (FORMATTING)
-# NOT PERFECT p7 = "/home/dan/Data/DelawareGov/Processed/2019/293770.detx"
-# NOT PERFECT p8 = '/home/dan/Data/DelawareGov/Processed/2019/293570.detx'
-
-
-
-
-
 ### Main Functions
 
 
 
 def parseAndSaveOP_all(jx='DE'):
+    """
+    Script to proccess all downloaded files and save them into the database
+    """
     
     if jx == 'DE':
         flist1 = getFileList("/home/dan/Data/CourtListener/Processed/Delaware", ".clwc", True)
@@ -72,7 +54,7 @@ def parseAndSaveOP_all(jx='DE'):
             parseAndSaveOP_LB(f)
 
     # ONLY DOES LB OPINIONS
-    # THERE ARE CL OPINIONS FOR SECOND AND THIRD CIRCUIT TOO THAT THIS MISSES!
+    # EXPAND TO INCLUDE SECOND AND THIRD CIRCUIT WC FILES
     if jx == 'US':
         flist_lb = getFileList("/home/dan/Data/CourtListener/Processed/Federal", ".cllb", True)
         print("Parsing", len(flist_lb), " US opinion files. Completed: ", end='')
@@ -106,6 +88,10 @@ def parseAndSaveOP_LB(filePath):
 
 
 def parseOP_text(filePath, verbose=0):
+    """
+    Script to parse plain text file; these are raw text files from court 
+    listener, from the Delaware government website, or any text file
+    """
 
     # 1. Initial check of file type
     if filePath.endswith(".clwc"): source = "CLWC"
@@ -164,7 +150,10 @@ def parseOP_text(filePath, verbose=0):
 
 
 def parseOP_LB(filePath):
-
+    """
+    Script to parse 'lawbox' opinion type from court listener; these are 
+    very well-formatted html files.  When available, use lawbox opinions.
+    """
     source = "CLLB"
     front, maintext, rawFNs = splitLawbox(filePath)
     maintext = add_para_IDs(maintext)

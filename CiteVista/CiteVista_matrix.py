@@ -6,11 +6,11 @@ Created on Wed Dec 18 18:31:44 2019
 @author: dan
 
 
-    The Cite Matrix - a special dictionary: 
-        Keys: documentID (int)
-        Value: a dictionary with following K-V pairs:
+        Cite Matrix - dictionary that stores citation relationships: 
+        Keys: (int) documentID 
+        Values: (dictionary) a dictionary with following values:
 
-            id": documentID (int)
+            "id": documentID (int)
 
             "next": a list of doc IDs (ints) of the documents that 
                     cite this one
@@ -20,10 +20,9 @@ Created on Wed Dec 18 18:31:44 2019
                         is in the cite dictionary; if not, the second element
                         is -1
 
-
-    The Cite Dictionary - a dictionary:
-        Keys: citation (str)
-        Values:   
+        Cite Dictionary:
+            Keys: int : docID
+            Values: list of ints : All documents by docID this doc cites
     
 """
 

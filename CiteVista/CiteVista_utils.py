@@ -20,10 +20,10 @@ from CiteVista_patterns import citePatterns_all
 
 
 ### PATHS
-
 corporaDir = "/home/dan/Data/CiteVista/Corpora/"
 WLrawCitesDir = "/home/dan/Data/CiteVista/rawWL/"
 CiteMatrixDir = "/home/dan/Data/CiteVista/CiteMatrix/"
+
 
 password = open("/home/dan/LibreLaw/config").read()[:-1]
 

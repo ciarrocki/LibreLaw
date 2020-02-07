@@ -8,7 +8,66 @@ Created on Wed Dec 18 18:37:43 2019
 
 
 
+import sys
+import os
+import re
+
+from CiteVista_utils import strip_tags
+
 import en_core_web_sm, en_core_web_lg  # Part of spacy - MIT license
+
+
+### Set up Django API Environment
+sys.path.append("/home/dan/LibreLaw/LibreLaw")
+os.environ['DJANGO_SETTINGS_MODULE'] = 'LibreLaw.settings'
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "LibreLaw.settings")
+import django
+django.setup()
+from Delaware.models import DEcourtDoc
+from Pennsylvania.models import PAcourtDoc
+from Federal.models import UScourtDoc
+
+
+
+
+
+
+
+def get_MT_by_docID(docID, database="DE"):
+    """
+    Gets and returns the main text from a court document in the database.
+    The main text is cleaned of html tags and certain content.
+
+    docID: the docID number of hte document for which we want to get the 
+    clean MT
+    """
+    
+    if database.lower() == 'de': doc = DEcourtDoc.objects.get(pk=docID)
+    elif database.lower() == 'pa': doc = PAcourtDoc.objects.get(pk=docID)
+    else:
+        print("Invalid database.")
+        return ""
+
+    text = doc.MainText
+
+    text = clean_MT(text)
+
+    return text
+
+
+
+
+def clean_MT(text):
+    """
+    Cleans text by removing:
+        (1) All footnote anchors and their corresponding html tags
+        (2) All html tags
+        
+    """
+
+    newtext = re.sub(r"\<a\shref\=\#FNnumber.*?\<\/a\>", "", text)
+    newtext = strip_tags(newtext)
+    return newtext    
 
 
 

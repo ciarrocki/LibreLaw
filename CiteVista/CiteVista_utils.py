@@ -11,6 +11,8 @@ Created on Tue Dec 17 19:15:30 2019
 
 import re
 import os
+from html.parser import HTMLParser
+
 
 import psycopg2
 from bs4 import BeautifulSoup
@@ -215,3 +217,28 @@ def isDate(string):
         return True
     except:
         return False
+
+
+
+
+class MLStripper(HTMLParser):
+    """
+    Basic HTML Stripper implementation using only standard library functions
+    """
+    def __init__(self):
+        self.reset()
+        self.strict = False
+        self.convert_charrefs= True
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    """
+    Simple method to create and use the html stripper
+    """
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()

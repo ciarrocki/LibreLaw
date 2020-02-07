@@ -4,12 +4,23 @@
 Created on Thu Dec 19 14:10:49 2019
 
 @author: dan
+
+Scripts that create graphs of citation relationships.  These scripts are used
+on the website to create custom graphs.  See www.librelaw.com
+
+The "standard_inverse" script draws a graph using a maximum "degree" and a 
+maximum "depth".  The degree is the maximum number of nodes shown in each layer.  
+The depth is the number of steps (i.e., layers) from the starting node.
+The degree is decreased by a factor of 2 and the process is repeated 
+recursively until the maximum depth has been reached.
+
+
 """
 
 
 import os
 import sys
-
+import pickle
 from graphviz import Digraph
 
 
@@ -22,96 +33,66 @@ django.setup()
 from Delaware.models import DEcourtDoc
 from Pennsylvania.models import PAcourtDoc
 
-
-
-o0 = 138849  # Airgas
-o1 = 116640 # Zohar
+CiteMatrixDir = "/home/dan/Data/CiteVista/CiteMatrix/"
 
 
 
+def load_cite_matrix(path=CiteMatrixDir+"matrix_de0.p"):
+    return pickle.load(open(path, "rb"))
 
 
-def drawPrevNext(docID, cite_matrix, database='DE', maxNext=10, maxPrev=10):
-    
-    if database=='DE': doc = DEcourtDoc.objects.get(pk=docID)
-    elif database=='PA': doc = PAcourtDoc.objects.get(pk=docID)
+
+
+
+def standard_inverse(LID, cite_matrix, database='DE', prev_degree=8, prev_depth=2, next_degree=10, next_depth=1):
+    """
+    Standard graph method.  See description above.
+
+    LID: Identification number of the starting node
+    cite_matrix: a Citematrix object - see CiteVista_matrix
+    prev_degree: The maximum degree for previous cases, i.e., cases the document cites
+    prev_depth: The maximum depth for previous cases
+    next_degree: The maximum degree for next cases, i.e., cases that cite the document
+    next_degree: The maximum depth for next cases
+    """
+    if database=='DE': db = DEcourtDoc.objects
+    elif database=='PA': db = PAcourtDoc.objects
+    else:
+        print("Invalid Database.")
+        return False
 
     dot = Digraph(comment="CiteVista", format='svg')
-    text = insertSpacing(doc.CaseName, 20)
-    dot.node('A', text, URL="http://www.espn.com")
+
+    prev_recursive(str(LID), "0", db, cite_matrix, dot, prev_degree, prev_depth, [], [])
+    next_recursive(str(LID), "0", db, cite_matrix, dot, next_degree, next_depth, [], [])
+
+    #dot.render('Delaware/static/Delaware/graphs/cust.svg')
+    dot.view()
+
+
+
+
+
+
+
+
+def prev_recursive(docID, nextID, db, cite_matrix, dot, max_degree, depth, Vlist, Elist):
+    """
+    Standard recursive method for "previous" cases - those that the document
+    in question cites and come previous in time.
     
-    for i, (cite, prevID) in enumerate(cite_matrix[docID]["previous"][:maxPrev]):
-        if prevID == -1: 
-            dot.node('p' + str(i), cite)
-            dot.edge('A', 'p' + str(i))
-            continue
-        else:
-            prevDoc = DEcourtDoc.objects.get(pk=prevID)
-            text = insertSpacing(prevDoc.CaseName, 15)
-            dot.node('p' + str(i), text)
-            dot.edge('A', 'p' + str(i))
+    Each time the recursive method is called, the degree is decreased by
+    a factor of two.
 
-
-    for i, nextID in enumerate(cite_matrix[docID]["next"][:maxNext]):
-        nextDoc = DEcourtDoc.objects.get(pk=nextID)
-        text = insertSpacing(nextDoc.CaseName, 15)
-        dot.node('n' + str(i), text)
-        dot.edge('n' + str(i), 'A')
-
-    dot.view()
-    #dot.render('test-output/test0.svg', view=True)
-
-
-
-
-
-
-def cust1_plusnext(docID, cite_matrix, database='DE', max_next=10, maxdegree=10, depth=2):
-    if database=='DE': db = DEcourtDoc.objects
-    elif database=='PA': db = PAcourtDoc.objects
-    else:
-        print("Invalid Database.")
-        return False
-
-    dot = Digraph(comment="CiteVista")
-
-    cust1_recursive(str(docID), "0", db, cite_matrix, dot, maxdegree, depth, [], [])
-
-    for i, nextID in enumerate(cite_matrix[docID]["next"][:max_next]):
-        nextDoc = DEcourtDoc.objects.get(pk=nextID)
-        text = insertSpacing(nextDoc.CaseName, 15)
-        dot.node('n' + str(i), text)
-        dot.edge('n' + str(i), str(docID))
-
-    dot.view()
-
-
-
-
-def cust1(docID, cite_matrix, database='DE', maxdegree=10, depth=2):
-    if database=='DE': db = DEcourtDoc.objects
-    elif database=='PA': db = PAcourtDoc.objects
-    else:
-        print("Invalid Database.")
-        return False
-
-    dot = Digraph(comment="CiteVista")
-
-    cust1_recursive(str(docID), "0", db, cite_matrix, dot, maxdegree, depth, [], [])
-
-    dot.view()
-
-
-
-
-
-def cust1_recursive(docID, nextID, db, cite_matrix, dot, maxdegree, depth, Vlist, Elist):
-
+    POSSIBLE CHANGE: Generalize by creating ability to set the factor by which
+    the degree is changed in each step.    
+    """    
+    
     doc = db.get(pk=int(docID))
-    text = insertSpacing(doc.Slug0, 15)
+    text = insertSpacing(doc.Slug0, 17)
     dot.node(str(docID), text)
     if nextID == "0": dot.node(str(docID), text, color="#f6ff52", style="filled")
-    else: dot.node(str(docID), text)
+    else: dot.node(str(docID), text, fontsize=str(12 - depth))
     Vlist.append(str(docID))
 
     if depth <= 0: return
@@ -122,10 +103,8 @@ def cust1_recursive(docID, nextID, db, cite_matrix, dot, maxdegree, depth, Vlist
         else: weight = len(cite_matrix[prevID]["next"])
         weighted_list.append((weight, cite, prevID))
     weighted_list.sort(reverse=True)
-    #print(weighted_list)    
 
-
-    for n, cite, prevID in weighted_list[:maxdegree]:
+    for n, cite, prevID in weighted_list[:max_degree]:
 
         if prevID == -1:
             if cite in Vlist:
@@ -133,7 +112,7 @@ def cust1_recursive(docID, nextID, db, cite_matrix, dot, maxdegree, depth, Vlist
                 dot.edge(str(docID), cite)
                 Elist.append((docID, cite))
             else:
-                dot.node(cite, cite)
+                dot.node(cite, cite, fontsize=str(12 - depth))
                 Vlist.append(cite)
                 if (str(docID), cite) in Elist: continue
                 dot.edge(str(docID), cite)
@@ -148,108 +127,67 @@ def cust1_recursive(docID, nextID, db, cite_matrix, dot, maxdegree, depth, Vlist
                 if (str(docID), str(prevID)) in Elist: continue
                 dot.edge(str(docID), str(prevID))
                 Elist.append((str(docID), str(prevID)))
-                cust1_recursive(str(prevID), str(docID), db, cite_matrix, dot, int(maxdegree / 2), depth - 1, Vlist, Elist)
-
-    
-
-
-
-def draw_prev_recursive(docID, cite_matrix, database='DE', maxdegree=10, depth=2):
-    if database=='DE': db = DEcourtDoc.objects
-    elif database=='PA': db = PAcourtDoc.objects
-    else:
-        print("Invalid Database.")
-        return False
-
-    dot = Digraph(comment="CiteVista")
-
-    recurse_prev_cites(str(docID), "0", db, cite_matrix, dot, maxdegree, depth, [], [])
-
-    dot.view()
+                prev_recursive(str(prevID), str(docID), db, cite_matrix, dot, int(max_degree / 2), depth - 1, Vlist, Elist)
 
 
 
 
 
-def recurse_prev_cites(docID, nextID, db, cite_matrix, dot, maxdegree, depth, Vlist, Elist):
 
-    
+def next_recursive(docID, nextID, db, cite_matrix, dot, max_degree, depth, Vlist, Elist):
+    """
+    Standard recursive method for "next" cases - those that cite the document
+    in question and come next in time.
+
+    Each time the recursive method is called, the degree is decreased by
+    a factor of two.
+
+    POSSIBLE CHANGE: Same as above: generalize by creating ability to set 
+    the factor by which the degree is changed in each step.    
+    """
+
     doc = db.get(pk=int(docID))
-    text = insertSpacing(doc.Slug0, 15)
+    text = insertSpacing(doc.Slug0, 17)
     dot.node(str(docID), text)
+    if nextID == "0": dot.node(str(docID), text, color="#f6ff52", style="filled")
+    else: dot.node(str(docID), text, fontsize=str(12 - depth))
     Vlist.append(str(docID))
 
     if depth <= 0: return
 
-    for cite, prevID in cite_matrix[int(docID)]["previous"][:maxdegree]:
+    weighted_list = []
+    for nextID in cite_matrix[int(docID)]["next"]:
+        if nextID == -1: weight = -1
+        else: weight = len(cite_matrix[nextID]["next"])
+        weighted_list.append((weight, nextID))
+    weighted_list.sort(reverse=True)
 
-        if prevID == -1:
-            if cite in Vlist:
-                if (str(docID), cite) in Elist: continue
-                dot.edge(str(docID), cite)
-                Elist.append((docID, cite))
-            else:
-                dot.node(cite, cite)
-                Vlist.append(cite)
-                if (str(docID), cite) in Elist: continue
-                dot.edge(str(docID), cite)
-                Elist.append((str(docID), cite))
+    for n, nextID in weighted_list[:max_degree]:
 
+        if nextID in Vlist:
+            if (str(nextID), str(docID)) in Elist: continue
+            dot.edge(str(nextID), str(docID))
+            Elist.append((str(nextID), str(docID)))
         else:
-            if cite in Vlist:
-                if (str(docID), str(prevID)) in Elist: continue
-                dot.edge(str(docID), str(prevID))
-                Elist.append((str(docID), str(prevID)))
-            else:
-                if (str(docID), str(prevID)) in Elist: continue
-                dot.edge(str(docID), str(prevID))
-                Elist.append((str(docID), str(prevID)))
-                recurse_prev_cites(str(prevID), str(docID), db, cite_matrix, dot, maxdegree, depth - 1, Vlist, Elist)
-
-
-
-
-
-def drawPrev2(docID, cite_matrix, database='DE', maxnum=10):
-    if database=='DE': doc = DEcourtDoc.objects.get(pk=docID)
-    elif database=='PA': doc = PAcourtDoc.objects.get(pk=docID)
-    else:
-        print("Invalid Database.")
-        return False
-
-    dot = Digraph(comment="CiteVista")
-    text = insertSpacing(doc.Slug0, 20)
-    dot.node('A', text)
-    
-    for i, (cite, prevID) in enumerate(cite_matrix[docID]["previous"][:maxnum]):
-        if prevID == -1:
-            dot.node('p' + str(i), cite)
-            dot.edge('A', 'p' + str(i))
-            continue
-        else:
-            prevDoc = DEcourtDoc.objects.get(pk=prevID)
-            text = insertSpacing(prevDoc.Slug0, 15)
-            dot.node('p' + str(i), text)
-            dot.edge('A', 'p' + str(i))
-            for j, (cite, prevID2) in enumerate(cite_matrix[prevID]["previous"][:maxnum]):
-                if prevID2 == -1:
-                    dot.node('p2' + str(j), cite)
-                    dot.edge('p' + str(i), 'p2' + str(j))
-                    continue
-                else:
-                    p2doc = DEcourtDoc.objects.get(pk=prevID2)
-                    text = insertSpacing(p2doc.Slug0, 15)
-                    dot.node('p2' + str(j), text)
-                    dot.edge('p' + str(i), 'p2' + str(j))
-    
-    dot.view()
-
-
+            if (str(nextID), str(docID)) in Elist: continue
+            dot.edge(str(nextID), str(docID))
+            Elist.append((str(nextID), str(docID)))
+            next_recursive(str(nextID), str(docID), db, cite_matrix, dot, int(max_degree / 2), depth - 1, Vlist, Elist)
 
 
 
 
 def insertSpacing(text, n):
+    """
+    Formats text for display in graphviz node bubbles.  When dot.node
+    is called, text prepared by this function should be supplied.
+
+    Inserts newline characters every n characters so that the text wraps
+    in the graphiz node bubble.
+
+    text: String of text for which we will add newline characters
+    n: The maximum number of characters per line in the graphviz bubble.
+    """
     wordlist = text.split()
     string = ""
     charCounter = 0
@@ -260,4 +198,4 @@ def insertSpacing(text, n):
         else:
             string = string + " " + word
             charCounter = charCounter + len(word) + 1
-    return string  
+    return string

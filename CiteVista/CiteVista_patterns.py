@@ -67,3 +67,9 @@ findCites_keywords = ['state', 'of', 'the', 'a', 'v.', 'in', 're', 're:',
     'capital', 'acquisition', 'delaware', 'county', 'cnty.', 'city',
     'pension', 'estate', 'a/k/a/', 'deceased',
     'writ', 'petition', 'rel.', 'pennsylvania', 'commonwealth']
+
+
+dqList_PeopleOrgs = ['plaintiff', 'defendant', 'complaint',
+                     'merger', 'court', 'chancery', 'v.']
+
+dqList_phrases_PeopleOrgs = ['llc', 'company']

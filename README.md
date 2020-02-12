@@ -17,10 +17,10 @@ All comments and ideas are welcome.
 
 ### Guide to the Repository
 
-<strong>CiteVista</strong>: NLP tools.  These scripts create datastructures to hold citation relationships among opinions, generate graphs that model relationships among opinions, identify people and organizations in text, and clean text in support of these functions.
+ - <strong>CiteVista</strong>: NLP tools.  These scripts create datastructures to hold citation relationships among opinions, generate graphs that model relationships among opinions, identify people and organizations in text, and clean text in support of these functions.
 
-<strong>OPparser</strong>: Scripts that download legal opinions from public sources, parse and format their content, and add them to the database.
+ - <strong>OPparser</strong>: Scripts that download legal opinions from public sources, parse and format their content, and add them to the database.
 
-<strong>STATparser</strong>: Scripts that download and parse statues and court rules from public sources, parse and format their content, and add them to the database.
+ - <strong>STATparser</strong>: Scripts that download and parse statues and court rules from public sources, parse and format their content, and add them to the database.
 
-<strong>Gensim</strong>: Experimental use of the Gensim library with the corpus of legal opinions.
+ - <strong>Gensim</strong>: Experimental use of the Gensim library with the corpus of legal opinions.

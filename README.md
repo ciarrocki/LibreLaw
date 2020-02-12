@@ -1,12 +1,26 @@
 # LibreLaw - A Free Database of Legal Materials
-## Visit the website at: www.librelaw.com
+## Visit the website at: [www.librelaw.com] (www.librelaw.com)
 
-Welcome to LibreLaw.  Our goal is to support research and analysis of legal materials using open-source natural language processing tools.  We believe that these materials form a large, well-organized, semantically consistent corpus with important commercial and public interest applications.
+Welcome to LibreLaw.  The goal of this project is to support research and analysis of legal materials using open-source natural language processing tools.  The website is the front-end for a database containing over 200,000 legal documents.  These documents are fully searchable, and search results can be filtered by various categories.  The website also includes NLP tools for analyzing the materials, like: 
+ - Create custom graphs of citation relationships among opinions
+ - Identify people and organizations in texts
 
-This repository contains some of the source-code that supports the website.  Specifically, you can find the scripts that:
+This repository contains some of the source-code that supports the www.librelaw.com website.  Specifically, you can find the scripts that:
 
  - Download raw opinions, statutes, and court rules 
  - Process and parse the raw text or PDFs so they can be stored as tabular data with defined dates, courts, jurisdictions, and other fields.
- - Analyze the corpus for connections between documents and build data structures that support the graphical CiteView featured on the website.
+ - Analyze the corpus for connections between documents and build data structures that support the graphical citeview featured on the website.
+ - Extract the names of people and organizations from any opinion in the corpus.
 
-We are always striving to improve our code and its documentation, and welcome all comments.
+All comments and ideas are welcome.
+
+
+### Guide to the Repository
+
+CiteVista: NLP tools.  These scripts create datastructures to hold citation relationships among opinions, generate graphs that model relationships among opinions, identify people and organizations in text, and clean text in support of these functions.
+
+OPparser: Scripts that download legal opinions from public sources, parse and format their content, and add them to the database.
+
+STATparser: Scripts that download and parse statues and court rules from public sources, parse and format their content, and add them to the database.
+
+Gensim: Experimental use of the Gensim library with the corpus of legal opinions.

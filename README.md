@@ -1,5 +1,5 @@
 # LibreLaw - A Free Database of Legal Materials
-## Visit the website at: [www.librelaw.com] (www.librelaw.com)
+## Visit the website at: www.librelaw.com
 
 Welcome to LibreLaw.  The goal of this project is to support research and analysis of legal materials using open-source natural language processing tools.  The website is the front-end for a database containing over 200,000 legal documents.  These documents are fully searchable, and search results can be filtered by various categories.  The website also includes NLP tools for analyzing the materials, like: 
  - Create custom graphs of citation relationships among opinions

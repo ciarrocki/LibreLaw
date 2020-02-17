@@ -33,6 +33,9 @@ def loadLines_text(filePath):
             newLine = newLine.replace(b'\xf3\xa0\x84\x8c', b'') # Very weird character; APPEARS ONLY ONCE: 'Pennsylvania/Superior/withCitations/4368527.html'
             decodedLine = newLine.decode('utf8').replace(r'\xa0', r' ') #Sometimes the reader generates files with "\xa0" instead of normal spaces
             decodedLine = badCharRE.sub("~", decodedLine) # Remove characters that cause problems for mysql (mainly 4+ byte characters, I think?)  NOTE: I ALREADY MADE SURE EVERYTHING IS UTF8mb4
+            if "‖" in decodedLine:
+                decodedLine = decodedLine.replace("‖", "\"")
+                if "―" in decodedLine: decodedLine = decodedLine.replace("―", "\"")
             lineList.append(decodedLine)
 
     return lineList

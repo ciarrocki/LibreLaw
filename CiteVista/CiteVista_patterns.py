@@ -72,7 +72,8 @@ findCites_keywords = ['state', 'of', 'the', 'a', 'v.', 'in', 're', 're:',
 dqList_PeopleOrgs = ['plaintiff', 'defendant', 'complaint',
                      'merger', 'court', 'chancery', 'v.', 'c.a. no']
 
-dqList_phrases_PeopleOrgs = ['llc', 'company', 'llp', 'litig', 'l.p.']
+dqList_phrases_PeopleOrgs = ['llc', 'company', 'llp', 'litig', 'l.p.', 'jj', 
+                             'jr.', 'supr']
 
 not_end_word = ["v.", 
                 "corp.", "co.", "inc.", 'hldgs.', 'l.p.',

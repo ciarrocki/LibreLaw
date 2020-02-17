@@ -10,10 +10,28 @@ Scripts to extract lists of people and organizations from court documents.
 
 Main Functions:
 
-    get_people_orgs_by_ID(docID, database='DE'):
+
+    get_people_orgs_batch(court, jx, model, write=True, overwrite=False):
         
-        docID: (in) the document ID for which we want people + orgs
-        database: the database in which to find the docID
+        Gets the people and orgs from opinions for an entire court at a time.
+        Options allow saving to the database.
+        
+        court:  (str)   Name of the court (official?)
+        jx:     (str)   Name of the jurisdiction
+        model:  (str)   "Large" (default), "Medium", or "Small"; the spaCy model
+                        used for NER; soon to add custom model!
+        write:  (bool)  True (default) will write the people and organizations 
+                        to the database
+        overwrite:      False (default) will not write people or organizations
+                        to database if either field is already populated.
+
+
+    get_people_orgs_by_ID(docID, database='DE'):
+
+        Gets the people and organizations for a single document.
+        
+        docID: (int) the document ID for which we want people + orgs
+        database: (str) the database in which to find the docID
         
         returns three items: (1) a list of people in the document
                              (2) a list of organizations in the document
@@ -26,6 +44,7 @@ Main Functions:
 import sys
 import os
 import re
+import json
 
 from CiteVista_utils import strip_tags, getDocCites
 from CiteVista_patterns import dqList_PeopleOrgs, dqList_phrases_PeopleOrgs,\
@@ -46,11 +65,130 @@ from Federal.models import UScourtDoc
 
 
 
-def get_people_orgs_by_ID(docID, database="DE", model="large"):
+
+def get_people_orgs_batch(court="Chancery", jx="Delaware", model="large", 
+                          write=True, overwrite=False):
+    """Gets the people and orgs from opinions for an entire court at a time.
+        Options allow saving to the database."""
+
+    bigDict = {}
+
+    db, ct = check_court_jx(court, jx)
+    if not db: return
+    docs = db.objects.filter(Court__exact=ct)
+    print("Total records:", len(docs))
+
+    print("Done: ", end="")
+
+    for i, doc in enumerate(docs):
+
+        if (i % 10 == 0): print(i, ". . . ", end="")
+
+        #INITIAL CONDITION: IF OVERWRITE IS NOT SET
+        if write and (not overwrite):
+            if not ((doc.People == None) or (doc.People == "")) and\
+                   ((doc.Organizations == None) or (doc.Organizations == "")):
+                continue
+
+        text = doc.MainText
+        clean_text = clean_MT(text)
+        cites = getDocCites(clean_text)
+        full_cites = [getWholeCite(cite, clean_text) for cite in cites]
+        processed_text = removeCites(clean_text, full_cites)
+
+        nlp = en_core_web_lg.load()
+        people, orgs = people_orgs_batchNLP(processed_text, nlp)
+        people = [p for p, _ in people]
+        orgs = [o for o, _ in orgs]
+        docID = doc.id
+
+        if write:
+            doc.People = json.dumps(people)
+            doc.Organizations = json.dumps(orgs)
+            doc.save()
+
+        newDict = {"people":people, "orgs":orgs}
+        bigDict[docID] = newDict
+
+    print("Done")
+    return bigDict
+
+
+
+
+def people_orgs_batchNLP(text, nlp):
     
+    doc = nlp(text)
+    orgs = [x.text for x in doc.ents if x.label_ == 'ORG']
+    people = [x.text for x in doc.ents if x.label_ == 'PERSON']
+
+    # Step 3: Process and filter the list of organizations
+    orgdict = dict()
+    for item in orgs:
+        if item in orgdict.keys(): orgdict[item] += 1
+        else: orgdict[item] = 1
+    orgs = list(orgdict.items())
+    orgs.sort(key = lambda x: x[1], reverse=True)
+    orgs = filter_people_orgs(orgs)
+
+    # Step 4: Process and filter the list of people
+    peopledict = dict()
+    for item in people:
+        if item in peopledict.keys(): peopledict[item] += 1
+        else: peopledict[item] = 1
+    people = list(peopledict.items())
+    people.sort(key = lambda x: x[1], reverse=True)    
+    people = filter_people_orgs(people)
+
+    return people, orgs
+
+
+
+
+def check_court_jx(court, jx):
+
+    procourt = court.lower().strip()
+    projx = jx.lower().strip()
+
+    if (projx == "de") or (projx == "delaware"):
+        db = DEcourtDoc
+        if procourt == "chancery": return db, "Court of Chancery"
+        if procourt == "supreme": return db, "Supreme Court"
+        if procourt == "superior": return db, "Superior Court"
+        if procourt == "common pleas": return db, "Court of Common Pleas"
+        if procourt == "family": return db, "Family Court"
+        print("Invalid court.")
+        return ""
+    
+    if (projx == "pa") or (projx == "pennsylvania"):
+        db = PAcourtDoc
+        if procourt == "supreme": return db, "Supreme Court"
+        if procourt == "commonwealth": return db, "Commonwealth Court"
+        if procourt == "superior": return db, "Superior Court"
+        print("Invalid court.")
+    
+    if (projx == "us") or (projx == "federal"):
+        db = UScourtDoc
+        if procourt == "supreme": return db, "Supreme Court"
+        if procourt == "third circuit": return db, "Third Circuit"
+        if procourt == "second circuit": return db, "Second Circuit"
+        if procourt == "ddel": return db, "District of Delaware"
+        if procourt == "dnj": return db, "District of New Jersey"
+        if procourt == "edpa": return db, "Eastern District of Pennsylvania"
+        if procourt == "mdpa": return db, "Middle District of Pennsylvania"
+        if procourt == "wdpa": return db, "Western District of Pennsylvania"
+
+    print("Invalid jurisdiction.")
+    return ""
+
+
+
+def get_people_orgs_by_ID(docID, database="DE", model="large"):
+    """Gets the people and organizations for a single document (by docID)"""
+
     text = get_MT_by_ID(docID, database)    
     people, orgs = get_people_orgs_from_text(text, model)
-    
+
     return people, orgs, text
 
 
@@ -66,7 +204,7 @@ def get_MT_by_ID(docID, database="DE"):
     docID: the docID number of hte document for which we want to get the 
     clean MT
     """
-    
+
     # Step 1: Get the text from the document
     if database.lower() == 'de': doc = DEcourtDoc.objects.get(pk=docID)
     elif database.lower() == 'pa': doc = PAcourtDoc.objects.get(pk=docID)
